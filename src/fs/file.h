@@ -39,7 +39,7 @@ struct file_descriptor
     struct filesystem* filesystem;
 
     // Private data for internal file descriptor
-    void* private_data;
+    void* private;
     
     // The disk that the file descriptor should be used on
     struct disk* disk;
