@@ -93,10 +93,10 @@
 
 ### Built With
 
-* [![C][C]][]
-* [![Assembly][Assembly]][]
-* [![Bash][Bash]][]
-<!-- * [![Angular][Angular.io]][Angular-url] -->
+* [![C][C-lang]][C-url]
+* [![Assembly][Assembly-lang]][Assembly-url]
+* [![Bash][Bash-lang]][Bash-url]
+<!--* [![Angular][Angular.io]][Angular-url]-->
 <!-- * [![Svelte][Svelte.dev]][Svelte-url] -->
 <!-- * [![Laravel][Laravel.com]][Laravel-url] -->
 <!-- * [![Bootstrap][Bootstrap.com]][Bootstrap-url] -->
@@ -138,7 +138,7 @@ This is an example of how to list things you need to use the software and how to
 <!--    ```sh -->
 <!--    git remote set-url origin Genesis-Grid-Lab/GenesisOs -->
 <!--    git remote -v # confirm the changes -->
-   ```
+   <!--```-->
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -239,9 +239,12 @@ Project Link: [https://github.com/Genesis-Grid-Lab/GenesisOs](https://github.com
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/nesmy-point-du-jour-22b6a31b6
 [product-screenshot]: images/screenshot.png
-[C]: https://img.shields.io/badge/C-00599C?logo=c&logoColor=white
-[Bash]: https://img.shields.io/badge/Bash-4EAA25?logo=gnubash&logoColor=fff
-[Assembly]: https://img.shields.io/badge/Assembly-654FF0
+[C-url]: https://google.com
+[C-lang]: https://img.shields.io/badge/C-00599C?logo=c&logoColor=white
+[Bash-url]: https://google.com
+[Bash-lang]: https://img.shields.io/badge/Bash-4EAA25?logo=gnubash&logoColor=fff
+[Assembly-url]: https://google.com
+[Assembly-lang]: https://img.shields.io/badge/Assembly-654FF0
 [Next.js]: https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
 [Next-url]: https://nextjs.org/
 [React.js]: https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
