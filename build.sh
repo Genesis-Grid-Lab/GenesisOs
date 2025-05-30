@@ -1,7 +1,7 @@
-#/bin/bash
-export PREFIX="$HOME/opt/cross"
-export TARGET=i686-elf
-export PATH="$PREFIX/bin:$PATH"
-make clean
-make all
-make run
+#!/bin/sh
+set -e
+. ./headers.sh
+
+for PROJECT in $PROJECTS; do
+  (cd $PROJECT && DESTDIR="$SYSROOT" bear -- $MAKE install)
+done
