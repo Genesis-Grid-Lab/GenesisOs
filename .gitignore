@@ -1,4 +1,10 @@
-.iso
+output/
+build/
+
+*.img
+*.iso
+*.log
+*.swp
 
 # Prerequisites
 *.d
