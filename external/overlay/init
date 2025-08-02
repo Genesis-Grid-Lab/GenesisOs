@@ -1,0 +1,32 @@
+#!/bin/sh
+# initramfs-only init (PID 1)
+
+# Make sure PATH has busybox
+export PATH=/sbin:/bin:/usr/sbin:/usr/bin
+
+# Basic mounts
+mount -t proc     proc  /proc
+mount -t sysfs    sys   /sys
+mount -t devtmpfs dev   /dev
+
+# Helpful extras
+mkdir -p /dev/pts /dev/shm /run
+mount -t devpts   devpts /dev/pts
+mount -t tmpfs    tmpfs  /dev/shm
+mount -t tmpfs    tmpfs  /run
+hostname genesis
+
+# (Optional) bring up udev to populate /dev
+if [ -x /sbin/udevd ]; then
+  /sbin/udevd --daemon
+  /sbin/udevadm trigger --action=add
+fi
+
+# If you have early logs
+dmesg -n 7 >/dev/null 2>&1
+
+# Hand off to BusyBox init **inside the initramfs**
+exec /sbin/init
+# If that fails, drop to a shell for debugging:
+exec sh
+

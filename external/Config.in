@@ -1,0 +1,6 @@
+menu "GenesisOS Custom Packages"
+
+source "$BR2_EXTERNAL_GenesisOS_PATH/package/genesis-ui/Config.in"
+
+endmenu
+

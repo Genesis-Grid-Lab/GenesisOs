@@ -1,0 +1,106 @@
+// src/main.cpp
+#include <iostream>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
+#include <stdlib.h>     // for exit
+#include <fcntl.h>      // for O_RDWR
+#include <stdio.h>      // for FILE
+
+#include <EGL/egl.h>
+#include <GLES2/gl2.h>
+
+#include <gbm.h>
+
+#include <xf86drm.h>
+#include <xf86drmMode.h>
+
+#include <linux/input.h>
+
+#define CHECK(cond, msg) \
+    if(!(cond)){ \
+        std::cerr << msg << " : " << strerror(errno) << std::endl; \
+        return 1; \
+    }
+
+int main()
+{
+    // Open DRM
+    int fd = open("/dev/dri/renderD128", O_RDWR);
+
+    if(fd < 0){
+	fd = open("/dev/dri/card1", O_RDWR);
+    }
+    CHECK(fd >= 0, "Unable to open DRM.");
+
+    // Acquire GBM device
+    struct gbm_device *gbm = gbm_create_device(fd);
+    CHECK(gbm, "Unable to create GBM.");
+
+    // Create GBM surface
+    struct gbm_surface *surf = gbm_surface_create(gbm, 1280, 720, GBM_FORMAT_XRGB8888, GBM_BO_USE_RENDERING);
+    CHECK(surf, "Unable to create GBM surface.");
+
+    // Acquire EGL Display
+    EGLDisplay eglDisplay = eglGetDisplay((EGLNativeDisplayType)gbm);
+    CHECK(eglDisplay != EGL_NO_DISPLAY, "Unable to get EGL display.");
+
+    // Initialize EGL
+    EGLint major, minor;
+    eglInitialize(eglDisplay, &major, &minor);
+
+    // Choose config
+    EGLint num_configs = 0;
+    EGLConfig config;
+    EGLint configAttribs[] = {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_RED_SIZE, 8,
+        EGL_GREEN_SIZE, 8,
+        EGL_BLUE_SIZE, 8,
+        EGL_ALPHA_SIZE, 8,
+        EGL_NONE
+    };
+    eglChooseConfig(eglDisplay, configAttribs, &config, 1, &num_configs);
+    CHECK(num_configs == 1, "Unable to choose config.");
+
+    // Create context
+    EGLContext eglContext = eglCreateContext(eglDisplay, config, EGL_NO_CONTEXT, NULL);
+    CHECK(eglContext == EGL_NO_CONTEXT, "Unable to create context.");
+
+    // Create surface
+    EGLSurface eglSurface = eglCreateWindowSurface(eglDisplay, config, (EGLNativeWindowType)surf, NULL);
+    CHECK(eglSurface == EGL_NO_SURFACE, "Unable to create surface.");
+
+    eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext);
+
+    // Main Loop
+    bool running = true;
+
+    glClearColor(0.0, 0.0, 1.0, 1.0);
+    while(running)
+    {
+        glClear(GL_COLOR_BUFFER_BIT);
+        eglSwapBuffers(eglDisplay, eglSurface);
+
+        // Handle input here...
+        // e.g.: read from /dev/input/event*
+
+        // break when appropriate
+        // running = false;
+
+        usleep(16000);
+    }
+
+    // Cleanup
+    eglDestroySurface(eglDisplay, eglSurface);
+    eglDestroyContext(eglDisplay, eglContext);
+    eglTerminate(eglDisplay);
+    gbm_surface_destroy(surf);
+    gbm_device_destroy(gbm);
+    close(fd);
+
+    return 0;
+}
+
+

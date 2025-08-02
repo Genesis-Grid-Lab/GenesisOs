@@ -1,0 +1,9 @@
+config BR2_PACKAGE_GENESIS_UI
+    bool "Genesis UI"
+    depends on BR2_PACKAGE_MESA3D_OPENGL_EGL
+    #depends on BR2_PACKAGE_LIBGL
+    #depends on BR2_PACKAGE_HAS_LIBGL
+    depends on BR2_PACKAGE_SDL2
+    help
+      A custom 3D UI/game interface for GenesisOS
+

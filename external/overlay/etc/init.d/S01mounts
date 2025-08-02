@@ -1,0 +1,6 @@
+#!/bin/sh
+
+echo "Mounting /proc and /sys"
+mount -t proc none /proc
+mount -t sysfs none /sys
+

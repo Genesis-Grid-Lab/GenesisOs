@@ -1,0 +1,6 @@
+#!/bin/sh
+echo "Starting udev..."
+/sbin/udevd --daemon
+udevadm trigger
+udevadm settle
+

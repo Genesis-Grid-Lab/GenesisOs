@@ -1,0 +1,206 @@
+#define EGL_EGLEXT_PROTOTYPES
+#define GL_GLES_PROTOTYPES
+
+#include <iostream>
+#include <stdio.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
+#include <stdlib.h>
+#include <fcntl.h>
+
+#include <xf86drm.h>
+#include <xf86drmMode.h>
+
+#include <gbm.h>
+
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+#include <GL/gl.h>
+
+int main()
+{
+    // Open render node
+  // int fd = open("/dev/dri/renderD128", O_RDWR);
+  int fd = open("/dev/dri/card1", O_RDWR);
+  if (fd < 0) {
+    std::cerr << "Unable to open render node: " << strerror(errno) << std::endl;
+    return -1;
+  }
+
+  // Create GBM device
+  struct gbm_device *gbm = gbm_create_device(fd);
+  if (!gbm) {
+    std::cerr << "Unable to create GBM device" << std::endl;
+    close(fd);
+    return -1;
+  }
+  
+  // Create GBM surface
+  struct gbm_surface *surf = gbm_surface_create(gbm, 1280, 720,
+						GBM_FORMAT_XRGB8888,
+						GBM_BO_USE_RENDERING);
+  if (!surf) {
+    std::cerr << "Unable to create GBM surface" << std::endl;
+    gbm_device_destroy(gbm);
+    close(fd);
+    return -1;
+  }
+  
+  // Acquire EGL display from GBM
+  EGLDisplay eglDisplay = eglGetPlatformDisplay(
+						   EGL_PLATFORM_GBM_KHR, (void*)gbm, NULL);
+  if (eglDisplay == EGL_NO_DISPLAY) {
+    std::cerr << "Unable to get EGL platform display" << std::endl;
+    gbm_surface_destroy(surf);
+    gbm_device_destroy(gbm);
+    close(fd);
+    return -1;
+  }
+  
+  // Initialize EGL
+  EGLint major, minor;
+  if (!eglInitialize(eglDisplay, &major, &minor)) {
+    std::cerr << "Unable to initialize EGL" << std::endl;
+    eglTerminate(eglDisplay);
+    gbm_surface_destroy(surf);
+    gbm_device_destroy(gbm);
+    close(fd);
+    return -1;
+  }
+  
+  std::cout << "EGL Version = " << eglQueryString(eglDisplay, EGL_VERSION) << "\n";
+  std::cout << "EGL Vendor = " << eglQueryString(eglDisplay, EGL_VENDOR) << "\n";
+  
+  // Bind API
+  eglBindAPI(EGL_OPENGL_ES_API);
+  
+  // Choose config
+  EGLint attr[] = {
+    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+    EGL_RED_SIZE, 8,
+    EGL_GREEN_SIZE, 8,
+    EGL_BLUE_SIZE, 8,
+    EGL_ALPHA_SIZE, 8,
+    EGL_DEPTH_SIZE, 16,
+    EGL_NONE
+  };
+  
+  EGLConfig config = NULL;
+  EGLint num_configs = 0;
+  
+  if (!eglChooseConfig(eglDisplay, attr, &config, 1, &num_configs) ||
+      num_configs == 0) {
+    std::cerr << "Unable to choose EGL config" << std::endl;
+    eglTerminate(eglDisplay);
+    gbm_surface_destroy(surf);
+    gbm_device_destroy(gbm);
+    close(fd);
+    return -1;
+  }
+
+  // Create context
+  EGLint contextAttributes[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+  EGLContext context = eglCreateContext(eglDisplay, config, EGL_NO_CONTEXT, contextAttributes);
+  if (context == EGL_NO_CONTEXT) {
+    std::cerr << "Unable to create EGL context" << std::endl;
+    eglTerminate(eglDisplay);
+    gbm_surface_destroy(surf);
+    gbm_device_destroy(gbm);
+    close(fd);
+    return -1;
+  }
+
+  // Create surface
+  EGLSurface egl_surface = eglCreateWindowSurface(eglDisplay, config, (EGLNativeWindowType)surf, NULL);
+  if (egl_surface == EGL_NO_SURFACE) {
+    std::cerr << "Unable to create EGL surface : " << eglGetError() << std::endl;
+    eglDestroyContext(eglDisplay, context);
+    eglTerminate(eglDisplay);
+    gbm_surface_destroy(surf);
+    gbm_device_destroy(gbm);
+    close(fd);
+    return -1;
+  }
+
+  // Choose config
+  // EGLint attrPbuffer[] = {
+  //   EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
+  //   EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+  //   EGL_RED_SIZE, 8,
+  //   EGL_GREEN_SIZE, 8,
+  //   EGL_BLUE_SIZE, 8,
+  //   EGL_ALPHA_SIZE, 8,
+  //   EGL_DEPTH_SIZE, 16,
+  //   EGL_NONE
+  // };
+  
+  // EGLConfig configPbuffer = NULL;
+  // EGLint num_configsPbuffer = 0;
+  
+  // if (!eglChooseConfig(eglDisplay, attrPbuffer, &configPbuffer, 1, &num_configsPbuffer) ||
+  //     num_configs == 0) {
+  //   std::cerr << "Unable to choose EGL config" << std::endl;
+  //   eglTerminate(eglDisplay);
+  //   gbm_surface_destroy(surf);
+  //   gbm_device_destroy(gbm);
+  //   close(fd);
+  //   return -1;
+  // }
+  
+  // EGLint pbufferAttribs[] = {
+  //   EGL_WIDTH, 1280,
+  //   EGL_HEIGHT, 720,
+  //   EGL_NONE
+  // };  
+  
+  // EGLSurface egl_psurface = eglCreatePbufferSurface(eglDisplay, configPbuffer, pbufferAttribs);
+  // if (egl_psurface == EGL_NO_SURFACE) {
+  //   std::cerr << "Unable to create pbuffer surface : " << eglGetError() << std::endl;
+  //   // Handle error...
+  // }
+  
+  // Make context current
+  if (!eglMakeCurrent(eglDisplay, egl_surface, egl_surface, context)) {
+    std::cerr << "Unable to make context current!" << std::endl;
+    eglDestroySurface(eglDisplay, egl_surface);
+    eglDestroyContext(eglDisplay, context);
+    eglTerminate(eglDisplay);
+    gbm_surface_destroy(surf);
+    gbm_device_destroy(gbm);
+    close(fd);
+    return -1;
+  }
+  
+  std::cout << "EGL context successfully created!" << std::endl;
+  
+   // Main Loop
+    bool running = true;
+
+    glClearColor(0.0, 0.0, 1.0, 1.0);
+    while(running)
+    {
+        glClear(GL_COLOR_BUFFER_BIT);
+        eglSwapBuffers(eglDisplay, egl_surface);
+
+        // Handle input here...
+        // e.g.: read from /dev/input/event*
+
+        // break when appropriate
+        // running = false;
+
+        usleep(16000);
+    }
+
+    // Cleanup
+    eglDestroySurface(eglDisplay, egl_surface);
+    eglDestroyContext(eglDisplay, context);
+    eglTerminate(eglDisplay);
+    gbm_surface_destroy(surf);
+    gbm_device_destroy(gbm);
+    close(fd);
+
+    return 0;
+}
+
