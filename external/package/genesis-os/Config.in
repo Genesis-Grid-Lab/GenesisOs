@@ -1,0 +1,10 @@
+config BR2_PACKAGE_GENESIS_OS
+    bool "Genesis OS"
+    depends on BR2_PACKAGE_MESA3D_OPENGL_EGL
+    select BR2_PACKAGE_LIBDRM
+    select BR2_PACKAGE_LIBEGL
+    select BR2_PACKAGE_LIBGBM
+    select BR2_PACKAGE_GLES2
+    help
+      A custom 3D UI/game interface for GenesisOS
+

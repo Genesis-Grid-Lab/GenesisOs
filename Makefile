@@ -4,6 +4,7 @@ OUT_DIR := $(shell realpath output)
 BR2_EXTERNAL := $(shell realpath external)
 BR2_EXTERNAL_GENESISOS_PATH := $(BR2_EXTERNAL)
 OVERLAY_DIR := $(BR2_EXTERNAL_GENESISOS_PATH)/overlay
+JOBS ?= $(shell getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.logicalcpu 2>/dev/null || echo 4)
 
 .PHONY: all config build qemu menuconfig
 
@@ -22,7 +23,7 @@ config:
 build:
 	@echo "Using overlay at: $(OVERLAY_DIR)"
 	BR2_ROOTFS_OVERLAY="$(OVERLAY_DIR)" \
-	make O=$(OUT_DIR) -C $(BUILDROOT_DIR) -j4
+	make O=$(OUT_DIR) -C $(BUILDROOT_DIR) -j$(JOBS)
 
 Make-ext4:
 	dd if=/dev/zero of=$(OUT_DIR)/images/rootfs.ext4 bs=1M count=512
@@ -38,10 +39,10 @@ linux-menuconfig:
 	make O=$(OUT_DIR) -C $(BUILDROOT_DIR) linux-menuconfig
 
 genesis-ui:
-	make O=$(OUT_DIR) -C $(BUILDROOT_DIR) genesis-ui -j4
+	make O=$(OUT_DIR) -C $(BUILDROOT_DIR) genesis-os -j$(JOBS)
 
 genesis-ui-rebuild:
-	make O=$(OUT_DIR) -C $(BUILDROOT_DIR) genesis-ui-rebuild -j4
+	make O=$(OUT_DIR) -C $(BUILDROOT_DIR) genesis-os-rebuild -j$(JOBS)
 
 qemu:
 	qemu-system-x86_64 \
@@ -74,9 +75,9 @@ clean:
 
 # Clean only genesis-ui build files
 clean-ui:
-	rm -rf $(OUT_DIR)/build/genesis-ui-1.0 \
-	       $(OUT_DIR)/staging/usr/bin/genesis-ui \
-	       $(OUT_DIR)/target/usr/bin/genesis-ui
+	rm -rf $(OUT_DIR)/build/genesis-os-1.0 \
+	       $(OUT_DIR)/staging/usr/bin/genesis-os \
+	       $(OUT_DIR)/target/usr/bin/genesis-os
 
 clean-final:
 	make O=$(OUT_DIR) -C $(BUILDROOT_DIR) target-finalize-clean
