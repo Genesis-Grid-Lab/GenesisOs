@@ -57,6 +57,23 @@ qemu:
 		-vga virtio \
 		-serial mon:stdio
 
+qemu-arch:
+	qemu-system-x86_64 \
+		-kernel configs/vmlinuz-linux \
+		-initrd configs/initramfs-linux.img \
+		-drive file=output/images/rootfs.ext4,format=raw,if=virtio \
+		-append "console=ttyS0 root=/dev/vda rw" \
+		-m 1024 \
+		-enable-kvm \
+		-cpu host \
+		-device virtio-vga-gl \
+		-device virtio-gpu-pci \
+		-display sdl,gl=on \
+		-vga virtio \
+		-serial mon:stdio
+
+
+
 qemu-soft:
 	qemu-system-x86_64 \
 		-kernel $(OUT_DIR)/images/bzImage \
