@@ -20,10 +20,16 @@ config:
 		O=$(OUT_DIR) \
 		-C $(BUILDROOT_DIR) defconfig
 
-build:
+build-root:
 	@echo "Using overlay at: $(OVERLAY_DIR)"
 	BR2_ROOTFS_OVERLAY="$(OVERLAY_DIR)" \
 	make O=$(OUT_DIR) -C $(BUILDROOT_DIR) -j$(JOBS)
+
+build: build-root
+	@echo "Depmod Modules ......."
+	sudo depmod -b output/target 6.9.0
+	@echo "Building initrd ......"
+	(cd output/target && find . | cpio -o -H newc | gzip > ../images/rootfs.cpio.gz)
 
 Make-ext4:
 	dd if=/dev/zero of=$(OUT_DIR)/images/rootfs.ext4 bs=1M count=512
@@ -49,11 +55,10 @@ qemu:
 		-kernel $(OUT_DIR)/images/bzImage \
 		-initrd $(OUT_DIR)/images/rootfs.cpio.gz \
 		-drive file=output/images/rootfs.ext4,format=raw,if=virtio \
-		-append "console=ttyS0" \
+		-append "console=ttyS0 root=/dev/vda rw" \
 		-m 1024 -enable-kvm -cpu host \
-		-device virtio-vga-gl \
 		-device virtio-gpu-pci \
-		-display sdl,gl=on \
+		-display gtk,gl=on \
 		-vga virtio \
 		-serial mon:stdio
 
@@ -92,9 +97,9 @@ clean:
 
 # Clean only genesis-ui build files
 clean-ui:
-	rm -rf $(OUT_DIR)/build/genesis-os-1.0 \
-	       $(OUT_DIR)/staging/usr/bin/genesis-os \
-	       $(OUT_DIR)/target/usr/bin/genesis-os
+	rm -rf $(OUT_DIR)/build/genesis-os-* \
+	       $(OUT_DIR)/staging/usr/bin/genesis-ui \
+	       $(OUT_DIR)/target/usr/bin/genesis-ui
 
 clean-final:
 	make O=$(OUT_DIR) -C $(BUILDROOT_DIR) target-finalize-clean

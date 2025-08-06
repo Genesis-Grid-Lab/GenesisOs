@@ -7,7 +7,7 @@
 ::sysinit:/sbin/udevadm trigger
 
 # Start your UI after udev sets up devices
-#::respawn:/usr/bin/genesis-ui
+::respawn:/usr/bin/genesis-ui
 
 # Optional shell on tty1
 ::askfirst:-/bin/sh

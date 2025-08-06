@@ -1,0 +1,6 @@
+#!/bin/sh
+modprobe virtio_gpu
+modprobe drm
+modprobe drm_kms_helper
+modprobe ttm
+

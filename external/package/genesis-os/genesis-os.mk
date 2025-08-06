@@ -1,4 +1,4 @@
-GENESIS_OS_VERSION =  fcc3640d858c9633d8cddf49558bed9500300fd8
+GENESIS_OS_VERSION = e6f99549d2d27161e53c8a0f784f91deeaec3906
 GENESIS_OS_SITE = https://github.com/Genesis-Grid-Lab/Genesis-OS.git
 GENESIS_OS_SITE_METHOD = git
 GENESIS_OS_GIT_SUBMODULES = YES
@@ -24,6 +24,15 @@ endef
 define GENESIS_OS_INSTALL_TARGET_CMDS
 	DESTDIR=$(TARGET_DIR) $(MAKE) -C $(@D) install
 endef
+
+define GENESIS_OS_DEPLOY_MODULES_DEP
+	@echo "Running depmod ........................."
+    depmod -b $(TARGET_DIR) $(KERNEL_VERSION)
+endef
+
+ROOTFS_POST_BUILD_HOOKS += GENESIS_OS_DEPLOY_MODULES_DEP
+
+
 
 $(eval $(cmake-package))
 

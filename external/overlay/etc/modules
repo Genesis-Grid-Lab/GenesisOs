@@ -1,0 +1,4 @@
+virtio_gpu
+drm
+drm_kms_helper
+ttm
